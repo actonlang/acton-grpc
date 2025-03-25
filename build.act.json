@@ -1,0 +1,17 @@
+{
+    "dependencies": {
+        "http2": {
+            "url": "https://github.com/actonlang/acton-http2/archive/refs/heads/main.zip",
+            "hash": "1220a2acc17b587f6dcdeddd54545c0926208d9be72b67a876bb31abb041d15e9b20"
+        }
+    },
+    "zig_dependencies": {
+        "nghttp2": {
+            "url": "https://github.com/actonlang/nghttp2/archive/refs/heads/zig-build-v0.13.zip",
+            "hash": "12202b432d79cd653a6bb52858127a8af569e99331175692f0bcafe2258aaddfff40",
+            "artifacts": [
+                "nghttp2"
+            ]
+        }
+    }
+}

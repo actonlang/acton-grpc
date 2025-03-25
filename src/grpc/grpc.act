@@ -1,0 +1,47 @@
+import net
+import http2.client
+
+class ChannelArgumentType:
+    pass
+
+class ChannelCredentials:
+    pass
+
+class Compression:
+    pass
+
+def parse_target(target: str) -> (str, int):
+    port_search_start = 0
+
+    if target[0] == '[':
+        close_brack_pos = target.find(']', None, None)
+
+        if close_brack_pos > 0:
+            port_search_start = close_brack_pos
+        else:
+            raise Exception("Unclosed bracket in target string")
+
+    colon_pos = target.find(':', port_search_start)
+
+    if colon_pos > -1:
+        return target[:colon_pos], int(target[colon_pos+1:])
+    else:
+        return target, 0
+
+actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None):
+
+    host, port = parse_target(target)
+
+    if port == 0:
+        if credentials is None:
+            port = 80
+        else:
+            port = 443
+
+    def _on_connect(client: http2.client.Http2Client) -> None:
+        on_connect(self)
+
+    def _on_error(client: http2.client.Http2Client, error: str) -> None:
+        on_error(self, error)
+
+    h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error)
