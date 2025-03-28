@@ -38,8 +38,13 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
     host, port = parse_target(target)
 
+    if credentials is None:
+        scheme = 'http'
+    else:
+        scheme = 'https'
+
     if port == 0:
-        if credentials is None:
+        if scheme == 'http':
             port = 80
         else:
             port = 443
