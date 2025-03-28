@@ -1,6 +1,12 @@
 import net
 import http2.client
 
+protocol Message:
+    @staticmethod
+    decode: (bytes) -> Self
+
+    encode: (Self) -> bytes
+
 class ChannelArgumentType:
     pass
 
