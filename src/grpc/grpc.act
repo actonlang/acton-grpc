@@ -56,3 +56,34 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
         on_error(self, error)
 
     h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error)
+
+    def unary_unary(path: str, message: bytes, on_response: action(Channel) -> bytes):
+        
+        def _on_headers_recv(c: http2.client.Http2Client, headers: dict[str, str], end_stream: bool):
+            pass
+
+        def _on_data_recv(c: http2.client.Http2Client, data: bytes, end_stream: bool):
+            pass
+
+        headers = { ':method': 'POST',
+                    ':scheme': scheme,
+                    ':path': path,
+                    'te': 'trailers',
+                    'content-type': 'application/grpc' }
+
+        # No compression for now
+        compression_bytes = bytes([0x0])
+
+        length = len(message)
+
+        len_bytes = bytes([(length & 0xff000000) >> 24,
+                           (length & 0xff0000) >> 16,
+                           (length & 0xff00) >> 8, (length & 0xff)])
+
+        data = compression_bytes + len_bytes + message
+
+        stream_id = h2client.start_raw_stream(_on_headers_recv, _on_data_recv)
+
+        h2client.raw_send_headers(stream_id, headers, False)
+
+        h2client.raw_send_data(stream_id, data, True)
