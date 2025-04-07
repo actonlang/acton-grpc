@@ -55,7 +55,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
     def _on_error(client: http2.client.Http2Client, error: str) -> None:
         on_error(self, error)
 
-    h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error)
+    h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'tls')
 
     def unary_unary(path: str, message: bytes, on_response: action(Channel) -> bytes):
         
