@@ -13,6 +13,12 @@ class ChannelArgumentType:
 class ChannelCredentials:
     pass
 
+class TlsChannelCredentials(ChannelCredentials):
+    def __init__(self, root_certificates: ?bytes = None, private_key: ?bytes = None, certificate_chain: ?bytes = None):
+        self.root_certificates = root_certificates
+        self.private_key = private_key
+        self.certificate_chain = certificate_chain
+
 class Compression:
     pass
 
