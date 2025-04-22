@@ -65,13 +65,16 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
     h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'tls')
 
-    def unary_unary(path: str, message: bytes, on_response: action(Channel) -> bytes):
+    def unary_unary(path: str, message: bytes, on_response: action(Channel, bytes) -> None):
         
         def _on_headers_recv(c: http2.client.Http2Client, headers: dict[str, str], end_stream: bool):
-            pass
+            print(headers)
 
         def _on_data_recv(c: http2.client.Http2Client, data: bytes, end_stream: bool):
-            pass
+            # XXX This is way too naive, very temporary
+            length = (data[1] << 24) + (data[2] << 16) + (data[3] << 8) + data[4]
+            message = data[5:5+length]
+            on_response(self, message)
 
         headers = { ':method': 'POST',
                     ':scheme': scheme,
