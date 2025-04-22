@@ -55,6 +55,8 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
         else:
             port = 443
 
+    var stream_buffers: dict[u32, bytes] = {}
+
     def _on_connect(client: http2.client.Http2Client) -> None:
         on_connect(self)
 
