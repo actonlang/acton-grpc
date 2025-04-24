@@ -41,10 +41,11 @@ def parse_target(target: str) -> (str, int):
     else:
         return target, 0
 
-actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None, log_handler: ?logging.Handler):
+actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None, log_handler: ?logging.Handler = None):
 
     logh = logging.Handler("grpc.Channel")
-    logh.set_handler(log_handler)
+    if log_handler is not None:
+        logh.set_handler(log_handler)
     logger = logging.Logger(logh)
 
     host, port = parse_target(target)
@@ -100,7 +101,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
         stream_id = h2client.start_raw_stream(_on_headers_recv, _on_data_recv)
 
-        logger.debug('Stream opened for unary_unary call', {'stream_id', stream_id})
+        logger.debug('Stream opened for unary_unary call', {'stream_id': stream_id})
 
 
 
