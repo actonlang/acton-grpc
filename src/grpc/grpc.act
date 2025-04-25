@@ -41,7 +41,7 @@ def parse_target(target: str) -> (str, int):
     else:
         return target, 0
 
-actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None, log_handler: ?logging.Handler = None):
+actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None, log_handler: ?logging.Handler = None, tls_verify: bool = True):
 
     logh = logging.Handler("grpc.Channel")
     if log_handler is not None:
@@ -69,7 +69,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
     def _on_error(client: http2.client.Http2Client, error: str) -> None:
         on_error(self, error)
 
-    h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'https')
+    h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'https', tls_verify)
 
     def unary_unary(path: str, message: bytes, on_response: action(Channel, bytes) -> None):
         
