@@ -88,7 +88,9 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
                     'te': 'trailers',
                     'content-type': 'application/grpc' }
 
+        logger.debug('Additional headers', additional_headers)
         headers.update(additional_headers.items())
+        logger.debug('Headers after update', headers)
 
         # No compression for now
         compression_bytes = bytes([0x0])
