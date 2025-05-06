@@ -71,7 +71,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
     h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'https', tls_verify)
 
-    def unary_unary(path: str, message: bytes, on_response: action(Channel, bytes) -> None):
+    def unary_unary(path: str, message: bytes, on_response: action(Channel, bytes) -> None, additional_headers: dict[str, str] = {}):
         
         def _on_headers_recv(c: http2.client.Http2Client, headers: dict[str, str], end_stream: bool):
             print(headers)
@@ -87,6 +87,8 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
                     ':path': path,
                     'te': 'trailers',
                     'content-type': 'application/grpc' }
+
+        headers.update(additional_headers.items())
 
         # No compression for now
         compression_bytes = bytes([0x0])
