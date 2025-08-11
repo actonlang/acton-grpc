@@ -2,8 +2,8 @@
     "dependencies": {
         "http2": {
             "repo_url": "https://github.com/actonlang/acton-http2",
-            "url": "https://github.com/actonlang/acton-http2/archive/3e3b003122c8db7719546b0a35dc0b1dbaef167d.zip",
-            "hash": "12205dd1c4129976af74463acf1dd7f85a10e6ca55addea8f62cfb13309d6b8d60dd"
+            "url": "https://github.com/actonlang/acton-http2/archive/0b6cb6229440bac520984b3c534196cf525ab415.zip",
+            "hash": "12204c60ad5370e0f6d9695be3bf221a37298b3118e8e7a3c5a29de41c31c4ab1cfd"
         }
     },
     "zig_dependencies": {
