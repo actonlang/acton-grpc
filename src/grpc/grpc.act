@@ -21,7 +21,8 @@ class TlsChannelCredentials(ChannelCredentials):
         self.certificate_chain = certificate_chain
 
 class Compression:
-    pass
+    def __init__(self):
+        pass
 
 def parse_target(target: str) -> (str, int):
     port_search_start = 0
@@ -40,6 +41,33 @@ def parse_target(target: str) -> (str, int):
         return target[:colon_pos], int(target[colon_pos+1:])
     else:
         return target, 0
+
+def prefix_msg(msg: bytes, compression: Compression):
+    # No compression for now
+    compression_bytes = bytes([0x0])
+
+    length = len(msg)
+
+    len_bytes = bytes([(length & 0xff000000) >> 24,
+                       (length & 0xff0000) >> 16,
+                       (length & 0xff00) >> 8, (length & 0xff)])
+
+    return compression_bytes + len_bytes + msg
+
+
+actor MessageQueue(channel: Channel, stream_id: u32):
+
+     var queue: list[bytes] = []
+
+     def init_queue(msg_list: list[bytes]):
+         for msg in msg_list:
+             queue.append(msg)
+
+     def queue_msg(msg: bytes):
+         queue.append(msg)
+
+     def dequeue_msg() -> bytes:
+         return queue.pop(0)
 
 actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None, log_handler: ?logging.Handler = None, tls_verify: bool = True):
 
@@ -62,6 +90,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
             port = 443
 
     var stream_buffers: dict[u32, bytes] = {}
+    var send_queues: dict[u32, MessageQueue] = {}
 
     def _on_connect(client: http2.client.Http2Client) -> None:
         on_connect(self)
@@ -71,16 +100,30 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
     h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'https', tls_verify)
 
+    def _queue_notify(stream_id: u32):
+        more_msgs = True
+
+        while more_msgs:
+            msg = send_queues[stream_id].dequeue_msg()
+            if msg is not None:
+                h2client.raw_send_data(stream_id, prefix_msg(msg, Compression()), True)
+            else:
+                more_msgs = False
+            
+
     def unary_unary(path: str, message: bytes, on_response: action(Channel, bytes) -> None, additional_headers: dict[str, str] = {}):
         
-        def _on_headers_recv(c: http2.client.Http2Client, headers: dict[str, str], end_stream: bool):
+        def _on_headers_recv(c: http2.client.Http2Client, stream_id: u32, headers: dict[str, str], end_stream: bool):
             print(headers)
 
-        def _on_data_recv(c: http2.client.Http2Client, data: bytes, end_stream: bool):
-            # XXX This is way too naive, very temporary
-            length = (data[1] << 24) + (data[2] << 16) + (data[3] << 8) + data[4]
-            message = data[5:5+length]
-            on_response(self, message)
+        def _on_data_recv(c: http2.client.Http2Client, stream_id: u32, data: bytes, end_stream: bool):
+            stream_buffers[stream_id] += data
+            buffer = stream_buffers[stream_id] 
+            compressed = (buffer[0] != 0)
+            length = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4]
+            if len(buffer[5:]) >= length:
+                message = buffer[5:5+length]
+                on_response(self, message)
 
         headers = { ':method': 'POST',
                     ':scheme': scheme,
@@ -92,25 +135,47 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
         headers.update(additional_headers.items())
         logger.debug('Headers after update', headers)
 
-        # No compression for now
-        compression_bytes = bytes([0x0])
-
-        length = len(message)
-
-        len_bytes = bytes([(length & 0xff000000) >> 24,
-                           (length & 0xff0000) >> 16,
-                           (length & 0xff00) >> 8, (length & 0xff)])
-
-        data = compression_bytes + len_bytes + message
 
         stream_id = h2client.start_raw_stream(_on_headers_recv, _on_data_recv)
+        stream_buffers[stream_id] = b''
 
         logger.debug('Stream opened for unary_unary call', {'stream_id': stream_id})
-
 
 
         h2client.raw_send_headers(stream_id, headers, False)
         logger.debug('Sent headers', headers)
 
+        data = prefix_msg(message, Compression()) 
         h2client.raw_send_data(stream_id, data, True)
         logger.debug('Sent data', {'data': data})
+
+    def stream_stream(path: str, messages: list[bytes], on_response: action(Channel, bytes) -> None, additional_headers: dict[str, str] = {}) -> MessageQueue:
+        def _on_headers_recv(c: http2.client.Http2Client, stream_id: u32, headers: dict[str, str], end_stream: bool):
+            print(headers)
+
+        def _on_data_recv(c: http2.client.Http2Client, stream_id: u32, data: bytes, end_stream: bool):
+            stream_buffers[stream_id] += data
+            buffer = stream_buffers[stream_id] 
+            compressed = (buffer[0] != 0)
+            length = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4]
+            if len(buffer[5:]) >= length:
+                message = buffer[5:5+length]
+                on_response(self, message)
+
+        headers = { ':method': 'POST',
+                    ':scheme': scheme,
+                    ':path': path,
+                    'te': 'trailers',
+                    'content-type': 'application/grpc' }
+
+        headers.update(additional_headers.items())
+
+        stream_id = h2client.start_raw_stream(_on_headers_recv, _on_data_recv)
+        send_queues[stream_id] = MessageQueue(self, stream_id)
+
+        send_queues[stream_id].init_queue(messages)
+
+        _queue_notify(stream_id)
+
+        return send_queues[stream_id]
+
