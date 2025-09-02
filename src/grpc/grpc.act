@@ -109,6 +109,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
         while more_msgs:
             msg = send_queues[stream_id].dequeue_msg()
             if msg is not None:
+                logger.debug('Sending message', {'msg': msg})
                 h2client.raw_send_data(stream_id, prefix_msg(msg, Compression()), False)
             else:
                 more_msgs = False
@@ -144,7 +145,6 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
         logger.debug('Stream opened for unary_unary call', {'stream_id': stream_id})
 
-
         h2client.raw_send_headers(stream_id, headers, False)
         logger.debug('Sent headers', headers)
 
@@ -174,9 +174,14 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
         headers.update(additional_headers.items())
 
         stream_id = h2client.start_raw_stream(_on_headers_recv, _on_data_recv)
+        logger.debug('Stream opened for stream_stream call', {'stream_id': stream_id})
+
         send_queues[stream_id] = MessageQueue(self, stream_id)
 
         send_queues[stream_id].init_queue(messages)
+
+        h2client.raw_send_headers(stream_id, headers, False)
+        logger.debug('Sent headers', headers)
 
         _queue_notify(stream_id)
 
