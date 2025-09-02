@@ -66,8 +66,11 @@ actor MessageQueue(channel: Channel, stream_id: u32):
      def queue_msg(msg: bytes):
          queue.append(msg)
 
-     def dequeue_msg() -> bytes:
-         return queue.pop(0)
+     def dequeue_msg() -> ?bytes:
+         if len(queue) > 0:
+             return queue.pop(0)
+         else:
+             return None
 
 actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None, log_handler: ?logging.Handler = None, tls_verify: bool = True):
 
