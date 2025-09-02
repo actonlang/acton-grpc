@@ -109,7 +109,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
         while more_msgs:
             msg = send_queues[stream_id].dequeue_msg()
             if msg is not None:
-                h2client.raw_send_data(stream_id, prefix_msg(msg, Compression()), True)
+                h2client.raw_send_data(stream_id, prefix_msg(msg, Compression()), False)
             else:
                 more_msgs = False
             
