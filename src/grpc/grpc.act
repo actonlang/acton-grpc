@@ -158,12 +158,20 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
         def _on_data_recv(c: http2.client.Http2Client, stream_id: u32, data: bytes, end_stream: bool):
             stream_buffers[stream_id] += data
-            buffer = stream_buffers[stream_id] 
-            compressed = (buffer[0] != 0)
-            length = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4]
-            if len(buffer[5:]) >= length:
-                message = buffer[5:5+length]
+            compressed = (stream_buffers[stream_id][0] != 0)
+            length = (stream_buffers[stream_id][1] << 24) + \
+                     (stream_buffers[stream_id][2] << 16) + \
+                     (stream_buffers[stream_id][3] << 8) + \
+                     stream_buffers[stream_id][4]
+
+            while len(stream_buffers[stream_id][5:]) >= length:
+                message = stream_buffers[stream_id][5:5+length]
                 on_response(self, message)
+                stream_buffers[stream_id] = stream_buffers[stream_id][5+length:]
+                length = (stream_buffers[stream_id][1] << 24) + \
+                         (stream_buffers[stream_id][2] << 16) + \
+                         (stream_buffers[stream_id][3] << 8) + \
+                         stream_buffers[stream_id][4]
 
         headers = { ':method': 'POST',
                     ':scheme': scheme,
