@@ -168,10 +168,14 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
                 message = stream_buffers[stream_id][5:5+length]
                 on_response(self, message)
                 stream_buffers[stream_id] = stream_buffers[stream_id][5+length:]
-                length = (stream_buffers[stream_id][1] << 24) + \
-                         (stream_buffers[stream_id][2] << 16) + \
-                         (stream_buffers[stream_id][3] << 8) + \
-                         stream_buffers[stream_id][4]
+                if len(stream_buffers[stream_id]) > 5:
+                    compressed = (stream_buffers[stream_id][0] != 0)
+                    length = (stream_buffers[stream_id][1] << 24) + \
+                             (stream_buffers[stream_id][2] << 16) + \
+                             (stream_buffers[stream_id][3] << 8) + \
+                             stream_buffers[stream_id][4]
+                else:
+                    break
 
         headers = { ':method': 'POST',
                     ':scheme': scheme,
