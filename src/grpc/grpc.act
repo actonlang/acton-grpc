@@ -101,7 +101,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
     def _on_error(client: http2.client.Http2Client, error: str) -> None:
         on_error(self, error)
 
-    h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'https', tls_verify)
+    h2client = http2.client.Http2Client(cap, host, port, _on_connect, _on_error, scheme == 'https', tls_verify, log_handler=logh)
 
     def _queue_notify(stream_id: u32):
         more_msgs = True
