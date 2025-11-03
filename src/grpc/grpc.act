@@ -121,6 +121,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
             print(headers)
 
         def _on_data_recv(c: http2.client.Http2Client, stream_id: u32, data: bytes, end_stream: bool):
+            logger.debug('Received message data', {'data': data, 'stream_id': stream_id})
             stream_buffers[stream_id] += data
             buffer = stream_buffers[stream_id] 
             compressed = (buffer[0] != 0)
@@ -157,6 +158,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
             print(headers)
 
         def _on_data_recv(c: http2.client.Http2Client, stream_id: u32, data: bytes, end_stream: bool):
+            logger.debug('Received message data', {'data': data, 'stream_id': stream_id})
             stream_buffers[stream_id] += data
             compressed = (stream_buffers[stream_id][0] != 0)
             length = (stream_buffers[stream_id][1] << 24) + \
