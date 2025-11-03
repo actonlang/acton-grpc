@@ -126,6 +126,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
             buffer = stream_buffers[stream_id] 
             compressed = (buffer[0] != 0)
             length = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4]
+            logger.trace('Check buffer length', {'message_length': length, 'buffer_length': len(buffer[5:])})
             if len(buffer[5:]) >= length:
                 message = buffer[5:5+length]
                 on_response(self, message)
@@ -166,6 +167,8 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
                      (stream_buffers[stream_id][3] << 8) + \
                      stream_buffers[stream_id][4]
 
+            # loop over all complete mesages in the buffer
+            logger.trace('Check buffer length', {'message_length': length, 'buffer_length': len(stream_buffers[stream_id][5:])})
             while len(stream_buffers[stream_id][5:]) >= length:
                 message = stream_buffers[stream_id][5:5+length]
                 on_response(self, message)
