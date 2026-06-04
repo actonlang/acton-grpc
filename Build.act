@@ -3,7 +3,7 @@ fingerprint = 0x6f18159f734eb6d4
 dependencies = {
     "http2": (
         repo_url="https://github.com/actonlang/acton-http2",
-        url="https://github.com/actonlang/acton-http2/archive/58726a1926d8845969f5a7a63cd6299ddbb385fc.zip",
-        hash="N-V-__8AAKi4AADmnwAcTEJupJnxwOA4YdDFddRQYvPFHnoR"
+        url="https://github.com/actonlang/acton-http2/archive/37fb6661e5cf6dd9f2631bba64a362dc9ec19f75.zip",
+        hash="N-V-__8AALm4AADzjpce3dx6cpqZAy0d3l3WKyjIFMEwONwA"
     )
 }
