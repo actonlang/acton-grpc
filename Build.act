@@ -1,5 +1,5 @@
-name = "acton_grpc"
-fingerprint = 0x6f18159f734eb6d4
+name = "grpc"
+fingerprint = 0x2b44e58c186c0985
 dependencies = {
     "http2": (
         repo_url="https://github.com/actonlang/acton-http2",
