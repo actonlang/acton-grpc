@@ -133,6 +133,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
         headers = { ':method': 'POST',
                     ':scheme': scheme,
+                    ':authority': host + ":" + str(port),
                     ':path': path,
                     'te': 'trailers',
                     'content-type': 'application/grpc' }
@@ -184,6 +185,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
         headers = { ':method': 'POST',
                     ':scheme': scheme,
+                    ':authority': host + ":" + str(port),
                     ':path': path,
                     'te': 'trailers',
                     'content-type': 'application/grpc' }
