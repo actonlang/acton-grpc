@@ -118,7 +118,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
     def unary_unary(path: str, message: bytes, on_response: action(Channel, bytes) -> None, additional_headers: dict[str, str] = {}):
         
         def _on_headers_recv(c: http2.client.Http2Client, stream_id: u32, headers: dict[str, str], end_stream: bool):
-            print(headers)
+            logger.debug('Received response headers', {'stream_id': stream_id, 'headers': headers})
 
         def _on_data_recv(c: http2.client.Http2Client, stream_id: u32, data: bytes, end_stream: bool):
             logger.debug('Received message data', {'data': data, 'stream_id': stream_id})
@@ -157,7 +157,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
     def stream_stream(path: str, messages: list[bytes], on_response: action(Channel, bytes) -> None, additional_headers: dict[str, str] = {}) -> MessageQueue:
         def _on_headers_recv(c: http2.client.Http2Client, stream_id: u32, headers: dict[str, str], end_stream: bool):
-            print(headers)
+            logger.debug('Received response headers', {'stream_id': stream_id, 'headers': headers})
 
         def _on_data_recv(c: http2.client.Http2Client, stream_id: u32, data: bytes, end_stream: bool):
             logger.debug('Received message data', {'data': data, 'stream_id': stream_id})
