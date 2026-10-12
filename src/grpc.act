@@ -28,7 +28,7 @@ def parse_target(target: str) -> (str, int):
     port_search_start = 0
 
     if target[0] == '[':
-        close_brack_pos = target.find(']', None, None)
+        close_brack_pos = target.find(']')
 
         if close_brack_pos > 0:
             port_search_start = close_brack_pos

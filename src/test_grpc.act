@@ -1,0 +1,15 @@
+import grpc
+import testing
+
+
+def _test_parse_ipv6_target():
+    assert grpc.parse_target("[2001:db8::1]:57400") == ("[2001:db8::1]", 57400)
+    assert grpc.parse_target("[2001:db8::1]") == ("[2001:db8::1]", 0)
+    assert grpc.parse_target("[::1]:443") == ("[::1]", 443)
+
+
+def _test_parse_dns_and_ipv4_targets():
+    assert grpc.parse_target("router.example:57400") == ("router.example", 57400)
+    assert grpc.parse_target("router.example") == ("router.example", 0)
+    assert grpc.parse_target("192.0.2.1:57400") == ("192.0.2.1", 57400)
+    assert grpc.parse_target("192.0.2.1") == ("192.0.2.1", 0)
