@@ -75,22 +75,11 @@ actor MessageQueue(channel: Channel, stream_id: u32):
 actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgumentType], credentials: ?ChannelCredentials, compression: ?Compression, on_connect: action(Channel) -> None, on_error: action(Channel, str) -> None, log_handler: ?logging.Handler = None, tls_verify: bool = True):
 
     logh = logging.Handler("grpc.Channel")
-    if log_handler is not None:
-        logh.set_handler(log_handler)
     logger = logging.Logger(logh)
 
-    host, port = parse_target(target)
-
-    if credentials is None:
-        scheme = 'http'
-    else:
-        scheme = 'https'
-
-    if port == 0:
-        if scheme == 'http':
-            port = 80
-        else:
-            port = 443
+    host, requested_port = parse_target(target)
+    scheme = 'http' if credentials is None else 'https'
+    port = requested_port if requested_port != 0 else 80 if scheme == 'http' else 443
 
     var stream_buffers: dict[u32, bytes] = {}
     var send_queues: dict[u32, MessageQueue] = {}
@@ -207,3 +196,7 @@ actor Channel(cap: net.TCPConnectCap, target: str, options: list[ChannelArgument
 
         return send_queues[stream_id]
 
+
+    def __startup__():
+        if log_handler is not None:
+            logh.set_handler(log_handler)
